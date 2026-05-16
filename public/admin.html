@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VANATUR | Admin Login</title>
+    <meta
+      name="description"
+      content="Простая страница входа в admin-интерфейс VANATUR."
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="admin-body">
+    <main class="admin-simple">
+      <section class="surface-card admin-auth-card">
+        <div class="admin-auth-head">
+          <p class="eyebrow">VANATUR</p>
+          <h1>Admin Login</h1>
+          <p class="section-copy">
+            Здесь пока только UI-карточка входа. PostgreSQL-backed admin API для контента и заявок
+            уже подготовлен, но полноценная backend-авторизация ещё не подключена.
+          </p>
+        </div>
+
+        <form class="admin-auth-form" data-admin-login-form>
+          <label class="form-field">
+            <span>Login</span>
+            <input type="text" name="username" placeholder="admin" required />
+          </label>
+
+          <label class="form-field">
+            <span>Password</span>
+            <input type="password" name="password" placeholder="Введите пароль" required />
+          </label>
+
+          <div class="admin-auth-actions">
+            <button class="button" type="submit">Войти</button>
+            <a class="button button-ghost" href="/">Назад на сайт</a>
+          </div>
+
+          <p class="form-status admin-auth-status" data-admin-status aria-live="polite"></p>
+        </form>
+
+        <p class="admin-auth-hint">
+          Следующий шаг для этой страницы: подключить login, session/token и реальное управление
+          контентом через admin API.
+        </p>
+      </section>
+    </main>
+
+    <script src="/js/admin.js" defer></script>
+  </body>
+</html>

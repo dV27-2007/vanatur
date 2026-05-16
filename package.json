@@ -1,0 +1,13 @@
+{
+  "name": "vanatur",
+  "version": "1.0.0",
+  "description": "Multi-page VANATUR website with a Python and PostgreSQL backend",
+  "private": true,
+  "main": "server.py",
+  "scripts": {
+    "start": "python3 server.py",
+    "dev": "python3 dev-server.py",
+    "db:bootstrap": "python3 scripts/bootstrap_postgres.py",
+    "db:migrate-data": "python3 scripts/migrate_data_to_postgres.py"
+  }
+}
