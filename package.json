@@ -5,9 +5,26 @@
   "private": true,
   "main": "server.py",
   "scripts": {
-    "start": "python3 server.py",
-    "dev": "python3 dev-server.py",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "start": "vite preview",
+    "start:python": "python3 server.py",
+    "dev:python": "python3 dev-server.py",
     "db:bootstrap": "python3 scripts/bootstrap_postgres.py",
     "db:migrate-data": "python3 scripts/migrate_data_to_postgres.py"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.105.4",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.13"
+  },
+  "dependencies": {
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-router-dom": "^7.15.1"
   }
 }
