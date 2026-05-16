@@ -4,8 +4,9 @@ import { resolve } from "path";
 
 export default defineConfig({
   plugins: [react()],
-  root: "src",
+  root: resolve(__dirname, "src"),
   publicDir: resolve(__dirname, "public-static"),
+  envDir: resolve(__dirname),
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),
