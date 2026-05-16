@@ -16,7 +16,7 @@
 1. Установи зависимости:
 
 ```bash
-python3 -m pip install -r requirements.txt
+python3 -m pip install -r backend/requirements.txt
 ```
 
 2. Проверь `.env`.
@@ -173,7 +173,13 @@ npm run db:migrate-data
 - `scripts/`
 - `.env`
 - `.env.example`
-- `requirements.txt`
+- `backend/requirements.txt`
+
+## Deploy Na Wasmer
+
+- proekt nuzhno deployit' kak static site iz papki `public/`
+- kornevoy `requirements.txt` ubrat', inache Wasmer opredelyaet repo kak Python app i pytaetsya zapustit' backend
+- dlya Wasmer v repozitorii dobavlen `Staticfile`, poetomu public-sayt mozhno deplyoit' bez Python runtime
 - `package.json`
 
 ## Дальше

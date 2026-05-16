@@ -14,7 +14,7 @@ ENTRY_FILE = ROOT_DIR / "server.py"
 WATCHED_FILES = [
     ENTRY_FILE,
     ROOT_DIR / "package.json",
-    ROOT_DIR / "requirements.txt",
+    ROOT_DIR / "backend" / "requirements.txt",
     ROOT_DIR / ".env",
     ROOT_DIR / ".env.example",
 ]

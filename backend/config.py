@@ -63,7 +63,6 @@ class Settings:
 
     @classmethod
     def from_root(cls, root_dir: Path) -> "Settings":
-        load_env_file(root_dir / ".env.example", override=False)
         load_env_file(root_dir / ".env", override=True)
 
         host = os.environ.get("HOST", "127.0.0.1").strip() or "127.0.0.1"
