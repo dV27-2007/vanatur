@@ -1,11 +1,11 @@
 const navigationItems = [
   { key: "home", label: "Главная", href: "/" },
-  { key: "restaurant", label: "Ресторан", href: "/restaurant" },
-  { key: "menu", label: "Меню", href: "/menu" },
-  { key: "events", label: "Мероприятия", href: "/events" },
-  { key: "suites", label: "Купе", href: "/suites" },
-  { key: "sauna", label: "Сауна", href: "/sauna" },
-  { key: "hotel", label: "Отель", href: "/hotel" },
+  { key: "restaurant", label: "Ресторан", href: "/restaurant.html" },
+  { key: "menu", label: "Меню", href: "/menu.html" },
+  { key: "events", label: "Мероприятия", href: "/events.html" },
+  { key: "suites", label: "Купе", href: "/suites.html" },
+  { key: "sauna", label: "Сауна", href: "/sauna.html" },
+  { key: "hotel", label: "Отель", href: "/hotel.html" },
 ];
 
 let revealObserver;
@@ -38,7 +38,7 @@ function buildHeader(activePage) {
 
       <nav class="site-nav" data-site-nav>
         ${navLinks}
-        <a class="button" href="/contact">Связаться</a>
+        <a class="button" href="/contact.html">Связаться</a>
       </nav>
     </div>
   `;
@@ -51,7 +51,7 @@ function buildFooter(activePage) {
 
   const showBookingLink = !["sauna", "suites"].includes(activePage);
   const bookingLine = showBookingLink
-    ? '<a href="/booking" target="_blank" rel="noreferrer">Номера на Booking.com</a>'
+    ? '<a href="/booking.html" target="_blank" rel="noreferrer">Номера на Booking.com</a>'
     : '<span class="footer-note">Купе и сауна: бронь через менеджера</span>';
 
   return `
@@ -83,8 +83,8 @@ function buildFooter(activePage) {
               <span class="footer-label">Бронирование</span>
               <div class="footer-links">
                 ${bookingLine}
-                <a href="/hotel">Страница отеля</a>
-                <a href="/contact">Оставить заявку</a>
+                <a href="/hotel.html">Страница отеля</a>
+                <a href="/contact.html">Оставить заявку</a>
                 <span class="footer-note">Ежедневно: 12:00 - 02:00</span>
               </div>
             </div>
@@ -107,14 +107,14 @@ function buildMobileQuickBar(activePage) {
     return `
       <div class="mobile-quickbar__inner">
         <a class="button mobile-quickbar__button" href="tel:+37433510510">Позвонить</a>
-        <a class="mobile-quickbar__link" href="/contact">Заявка</a>
+        <a class="mobile-quickbar__link" href="/contact.html">Заявка</a>
       </div>
     `;
   }
 
   return `
     <div class="mobile-quickbar__inner">
-      <a class="button mobile-quickbar__button" href="/booking" target="_blank" rel="noreferrer">Номера</a>
+      <a class="button mobile-quickbar__button" href="/booking.html" target="_blank" rel="noreferrer">Номера</a>
       <a class="mobile-quickbar__link" href="tel:+37433510510">Позвонить</a>
     </div>
   `;
