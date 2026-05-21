@@ -1,22 +1,12 @@
 import { fetchSiteContent } from "./api.js";
 import { initReveal, initShell } from "./site-shell.js";
-import { createEmptyState, createFeatureList, createPills, escapeHtml } from "./ui.js";
-
-function renderCards(container, items, emptyMessage, mapper) {
-  if (!container) {
-    return;
-  }
-
-  container.innerHTML = items.length ? items.map(mapper).join("") : createEmptyState(emptyMessage);
-}
+import { createEmptyState, createFeatureList, createPills, escapeHtml, renderInfoCards } from "./ui.js";
 
 function initSuiteFilters(suitesData = []) {
   const filtersContainer = document.querySelector("[data-suite-filters]");
   const gridContainer = document.querySelector("[data-suite-grid]");
 
-  if (!filtersContainer || !gridContainer) {
-    return;
-  }
+  if (!filtersContainer || !gridContainer) return;
 
   if (!suitesData.length) {
     gridContainer.innerHTML = createEmptyState("Купе временно недоступны.");
@@ -52,15 +42,22 @@ function initSuiteFilters(suitesData = []) {
           )
           .join("")
       : createEmptyState("По выбранному фильтру подходящих купе пока нет.");
+
+    initReveal();
   };
 
   const renderFilters = () => {
+    filtersContainer.setAttribute("role", "tablist");
+    filtersContainer.setAttribute("aria-label", "Фильтр купе");
+
     filtersContainer.innerHTML = filters
       .map(
         (filter) => `
           <button
             class="filter-button ${filter === activeFilter ? "is-active" : ""}"
             type="button"
+            role="tab"
+            aria-selected="${filter === activeFilter}"
             data-filter="${escapeHtml(filter)}"
           >
             ${escapeHtml(filter)}
@@ -72,15 +69,11 @@ function initSuiteFilters(suitesData = []) {
 
   filtersContainer.addEventListener("click", (event) => {
     const button = event.target.closest("[data-filter]");
-
-    if (!button) {
-      return;
-    }
+    if (!button) return;
 
     activeFilter = button.dataset.filter || "Все";
     renderFilters();
     renderGrid();
-    initReveal();
   });
 
   renderFilters();
@@ -95,32 +88,8 @@ async function initPage() {
     const suitePage = content.suites || {};
 
     initSuiteFilters(suitePage.suites);
-
-    renderCards(
-      document.querySelector("[data-suite-services]"),
-      suitePage.services || [],
-      "Сервисы для купе скоро появятся.",
-      (item) => `
-        <article class="info-card reveal">
-          <span class="pill">Сервис</span>
-          <h3>${escapeHtml(item.title)}</h3>
-          <p>${escapeHtml(item.text)}</p>
-        </article>
-      `
-    );
-
-    renderCards(
-      document.querySelector("[data-suite-experiences]"),
-      suitePage.experiences || [],
-      "Сценарии вечера скоро появятся.",
-      (item) => `
-        <article class="info-card reveal">
-          <span class="pill">Формат</span>
-          <h3>${escapeHtml(item.title)}</h3>
-          <p>${escapeHtml(item.text)}</p>
-        </article>
-      `
-    );
+    renderInfoCards("[data-suite-services]", suitePage.services, "Сервис", "Сервисы для купе скоро появятся.");
+    renderInfoCards("[data-suite-experiences]", suitePage.experiences, "Формат", "Сценарии вечера скоро появятся.");
   } catch (error) {
     console.error(error);
   }

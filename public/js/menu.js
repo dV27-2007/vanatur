@@ -5,29 +5,7 @@ import {
   renderMenuNotes
 } from "./menu-renderers.js";
 import { initReveal, initShell } from "./site-shell.js";
-import { createEmptyState, escapeHtml } from "./ui.js";
-
-function renderPairings(pairings = []) {
-  const container = document.querySelector("[data-menu-pairings]");
-
-  if (!container) {
-    return;
-  }
-
-  container.innerHTML = pairings.length
-    ? pairings
-        .map(
-          (item) => `
-            <article class="info-card reveal">
-              <span class="pill">Сопровождение</span>
-              <h3>${escapeHtml(item.title)}</h3>
-              <p>${escapeHtml(item.text)}</p>
-            </article>
-          `
-        )
-        .join("")
-    : createEmptyState("Сопровождение к меню скоро появится.");
-}
+import { renderInfoCards } from "./ui.js";
 
 async function initPage() {
   initShell("menu");
@@ -44,7 +22,7 @@ async function initPage() {
       content.restaurant?.menuCategories,
       "Полное меню временно недоступно."
     );
-    renderPairings(content.restaurant?.pairings);
+    renderInfoCards("[data-menu-pairings]", content.restaurant?.pairings, "Сопровождение", "Сопровождение к меню скоро появится.");
     renderMenuNotes(
       "[data-menu-notes]",
       content.menu?.notes,

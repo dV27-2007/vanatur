@@ -1,10 +1,14 @@
-import { supabaseClient, fetchAdminInquiries, fetchSiteContent } from "./api.js";
+/* ============================================
+   Admin dashboard: auth, content editing,
+   menu management, image uploads, inquiries
+   ============================================ */
+
+import { supabaseClient, fetchAdminInquiries, fetchSiteContent, invalidateSiteContentCache } from "./api.js";
 import { initShell } from "./site-shell.js";
 import { escapeHtml } from "./ui.js";
 
-/* ============================================
-   DOM references
-   ============================================ */
+/* --- DOM references --- */
+
 const loginView = document.querySelector("[data-admin-login-view]");
 const dashboardView = document.querySelector("[data-admin-dashboard-view]");
 const loginForm = document.querySelector("[data-admin-login-form]");
@@ -18,16 +22,15 @@ const imagesEditor = document.querySelector("[data-images-editor]");
 
 let siteContent = null;
 
-/* ============================================
-   View switching
-   ============================================ */
+/* --- View switching --- */
+
 function showView(view) {
   if (view === "dashboard") {
-    loginView.style.display = "none";
-    dashboardView.style.display = "";
+    loginView.classList.add("is-hidden");
+    dashboardView.classList.remove("is-hidden");
   } else {
-    loginView.style.display = "";
-    dashboardView.style.display = "none";
+    loginView.classList.remove("is-hidden");
+    dashboardView.classList.add("is-hidden");
   }
 }
 
@@ -38,9 +41,8 @@ function setStatus(message, state = "") {
   else delete statusNode.dataset.state;
 }
 
-/* ============================================
-   Tab switching
-   ============================================ */
+/* --- Tab switching --- */
+
 function initTabs() {
   const tabContainer = document.querySelector("[data-admin-tabs]");
   if (!tabContainer) return;
@@ -49,8 +51,12 @@ function initTabs() {
     const tab = e.target.closest("[data-tab]");
     if (!tab) return;
 
-    tabContainer.querySelectorAll(".admin-tab").forEach((t) => t.classList.remove("is-active"));
+    tabContainer.querySelectorAll(".admin-tab").forEach((t) => {
+      t.classList.remove("is-active");
+      t.setAttribute("aria-selected", "false");
+    });
     tab.classList.add("is-active");
+    tab.setAttribute("aria-selected", "true");
 
     document.querySelectorAll(".admin-panel").forEach((p) => p.classList.remove("is-active"));
     const panel = document.querySelector(`[data-panel="${tab.dataset.tab}"]`);
@@ -58,9 +64,8 @@ function initTabs() {
   });
 }
 
-/* ============================================
-   Inquiries
-   ============================================ */
+/* --- Inquiries --- */
+
 function renderInquiries(inquiries) {
   if (!inquiriesContainer) return;
   if (!inquiries.length) {
@@ -109,9 +114,8 @@ async function loadInquiries() {
   }
 }
 
-/* ============================================
-   Content editor
-   ============================================ */
+/* --- Content editor --- */
+
 function renderContentEditor(content) {
   if (!contentEditor) return;
 
@@ -126,7 +130,7 @@ function renderContentEditor(content) {
     { key: "contact", label: "Контакты", fields: null },
   ];
 
-  let html = '<h2>Редактирование текстов</h2><p class="section-copy" style="margin-bottom:1.5rem">Измените тексты сайта и нажмите "Сохранить".</p>';
+  let html = '<h2>Редактирование текстов</h2><p class="section-copy">Измените тексты сайта и нажмите "Сохранить".</p>';
 
   sections.forEach((sec) => {
     const data = content[sec.key] || {};
@@ -170,27 +174,33 @@ async function saveContent() {
   if (statusEl) statusEl.textContent = "Сохранение...";
 
   const inputs = contentEditor.querySelectorAll("[data-content-path]");
-  const updated = { ...siteContent };
+  const updated = structuredClone(siteContent);
 
-  inputs.forEach((input) => {
+  let hasError = false;
+
+  for (const input of inputs) {
     const path = input.dataset.contentPath;
     const parts = path.split(".");
-    let val = input.value;
+    const val = input.value;
 
     if (parts.length === 2) {
       if (!updated[parts[0]]) updated[parts[0]] = {};
-      try {
-        updated[parts[0]][parts[1]] = val;
-      } catch { /* skip */ }
+      updated[parts[0]][parts[1]] = val;
     } else if (parts.length === 1) {
       try {
         updated[parts[0]] = JSON.parse(val);
       } catch {
-        if (statusEl) { statusEl.textContent = `Ошибка JSON в секции "${parts[0]}"`; statusEl.dataset.state = "error"; }
-        return;
+        if (statusEl) {
+          statusEl.textContent = `Ошибка JSON в секции "${parts[0]}"`;
+          statusEl.dataset.state = "error";
+        }
+        hasError = true;
+        break;
       }
     }
-  });
+  }
+
+  if (hasError) return;
 
   const { error } = await supabaseClient
     .from("site_content")
@@ -201,13 +211,13 @@ async function saveContent() {
     if (statusEl) { statusEl.textContent = "Ошибка сохранения."; statusEl.dataset.state = "error"; }
   } else {
     siteContent = updated;
+    invalidateSiteContentCache();
     if (statusEl) { statusEl.textContent = "Сохранено."; statusEl.dataset.state = "success"; }
   }
 }
 
-/* ============================================
-   Menu editor
-   ============================================ */
+/* --- Menu editor --- */
+
 function renderMenuEditor(content) {
   if (!menuEditor) return;
 
@@ -215,7 +225,7 @@ function renderMenuEditor(content) {
 
   let html = `
     <h2>Управление меню</h2>
-    <p class="section-copy" style="margin-bottom:1.5rem">Добавляйте, редактируйте и удаляйте категории и блюда.</p>
+    <p class="section-copy">Добавляйте, редактируйте и удаляйте категории и блюда.</p>
   `;
 
   categories.forEach((cat, catIdx) => {
@@ -223,7 +233,7 @@ function renderMenuEditor(content) {
       <div class="admin-menu-category" data-cat-index="${catIdx}">
         <div class="admin-menu-item-header">
           <h4>${escapeHtml(cat.name)}</h4>
-          <div style="display:flex;gap:0.4rem">
+          <div class="admin-btn-group">
             <button class="admin-btn-icon danger" type="button" data-delete-cat="${catIdx}" title="Удалить категорию">&times;</button>
           </div>
         </div>
@@ -304,8 +314,7 @@ function collectMenuData() {
       const itemData = {};
       itemEl.querySelectorAll("[data-item-field]").forEach((input) => {
         const field = input.dataset.itemField;
-        const parts = field.split(".");
-        const fieldName = parts[2];
+        const fieldName = field.split(".")[2];
         if (fieldName === "ingredients") {
           itemData[fieldName] = input.value.split(",").map((s) => s.trim()).filter(Boolean);
         } else {
@@ -330,17 +339,20 @@ async function saveMenu() {
   if (statusEl) statusEl.textContent = "Сохранение...";
 
   const categories = collectMenuData();
-  if (!siteContent.restaurant) siteContent.restaurant = {};
-  siteContent.restaurant.menuCategories = categories;
+  const updated = structuredClone(siteContent);
+  if (!updated.restaurant) updated.restaurant = {};
+  updated.restaurant.menuCategories = categories;
 
   const { error } = await supabaseClient
     .from("site_content")
-    .update({ payload: siteContent })
+    .update({ payload: updated })
     .eq("content_key", "main");
 
   if (error) {
     if (statusEl) { statusEl.textContent = "Ошибка сохранения."; statusEl.dataset.state = "error"; }
   } else {
+    siteContent = updated;
+    invalidateSiteContentCache();
     if (statusEl) { statusEl.textContent = "Сохранено."; statusEl.dataset.state = "success"; }
     renderMenuEditor(siteContent);
   }
@@ -349,7 +361,6 @@ async function saveMenu() {
 function handleMenuActions(e) {
   const target = e.target;
 
-  // Delete category
   const delCat = target.closest("[data-delete-cat]");
   if (delCat) {
     const idx = Number(delCat.dataset.deleteCat);
@@ -360,7 +371,6 @@ function handleMenuActions(e) {
     return;
   }
 
-  // Delete item
   const delItem = target.closest("[data-delete-item]");
   if (delItem) {
     const [catIdx, itemIdx] = delItem.dataset.deleteItem.split(".").map(Number);
@@ -371,7 +381,6 @@ function handleMenuActions(e) {
     return;
   }
 
-  // Add item
   const addItem = target.closest("[data-add-item]");
   if (addItem) {
     const catIdx = Number(addItem.dataset.addItem);
@@ -389,7 +398,6 @@ function handleMenuActions(e) {
     return;
   }
 
-  // Add category
   const addCat = target.closest("[data-add-cat]");
   if (addCat) {
     if (!siteContent.restaurant) siteContent.restaurant = {};
@@ -403,10 +411,8 @@ function handleMenuActions(e) {
     return;
   }
 
-  // Save menu
   const saveBtn = target.closest("[data-save-menu]");
   if (saveBtn) {
-    // First sync input values into siteContent
     const categories = collectMenuData();
     if (!siteContent.restaurant) siteContent.restaurant = {};
     siteContent.restaurant.menuCategories = categories;
@@ -415,9 +421,8 @@ function handleMenuActions(e) {
   }
 }
 
-/* ============================================
-   Images editor
-   ============================================ */
+/* --- Images editor --- */
+
 async function renderImagesEditor() {
   if (!imagesEditor) return;
 
@@ -428,7 +433,7 @@ async function renderImagesEditor() {
 
   let html = `
     <h2>Изображения</h2>
-    <p class="section-copy" style="margin-bottom:1rem">Загрузите изображения для использования в меню и на страницах сайта.</p>
+    <p class="section-copy">Загрузите изображения для использования в меню и на страницах сайта.</p>
     <div class="admin-field-group">
       <label class="admin-field-label">Загрузить изображение</label>
       <input type="file" class="admin-file-input" accept="image/*" data-image-upload />
@@ -437,18 +442,18 @@ async function renderImagesEditor() {
       <label class="admin-field-label">Контекст (необязательно)</label>
       <input class="admin-field-input" data-image-context placeholder="menu, hero, sauna..." />
     </div>
-    <button class="button" type="button" data-upload-image style="margin-bottom:1.5rem">Загрузить</button>
+    <button class="button" type="button" data-upload-image>Загрузить</button>
     <span class="form-status" data-upload-status></span>
   `;
 
   if (uploads && uploads.length) {
-    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem">';
+    html += '<div class="admin-upload-grid">';
     uploads.forEach((upload) => {
       html += `
-        <div class="surface-card" style="padding:0.5rem;display:grid;gap:0.4rem">
-          <img src="${escapeHtml(upload.url)}" alt="${escapeHtml(upload.alt)}" style="width:100%;height:120px;object-fit:cover;border-radius:var(--radius-sm)" />
-          <input class="admin-field-input" value="${escapeHtml(upload.url)}" readonly style="font-size:0.75rem" onclick="this.select()" />
-          <button class="admin-btn-icon danger" type="button" data-delete-upload="${upload.id}" title="Удалить" style="width:100%">&times; Удалить</button>
+        <div class="admin-upload-thumb">
+          <img class="admin-upload-thumb__img" src="${escapeHtml(upload.url)}" alt="${escapeHtml(upload.alt)}" />
+          <input class="admin-upload-thumb__url" value="${escapeHtml(upload.url)}" readonly data-select-on-focus />
+          <button class="admin-btn-icon danger admin-upload-thumb__delete" type="button" data-delete-upload="${upload.id}" title="Удалить">&times; Удалить</button>
         </div>
       `;
     });
@@ -458,6 +463,10 @@ async function renderImagesEditor() {
   }
 
   imagesEditor.innerHTML = html;
+
+  imagesEditor.querySelectorAll("[data-select-on-focus]").forEach((input) => {
+    input.addEventListener("focus", () => input.select());
+  });
 }
 
 async function uploadImage() {
@@ -501,13 +510,28 @@ async function uploadImage() {
 }
 
 async function deleteUpload(id) {
+  if (!confirm("Удалить это изображение?")) return;
+
+  const { data: row } = await supabaseClient
+    .from("admin_uploads")
+    .select("url")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (row?.url) {
+    const url = new URL(row.url);
+    const path = url.pathname.split("/uploads/")[1];
+    if (path) {
+      await supabaseClient.storage.from("uploads").remove([path]);
+    }
+  }
+
   await supabaseClient.from("admin_uploads").delete().eq("id", id);
   renderImagesEditor();
 }
 
-/* ============================================
-   Auth
-   ============================================ */
+/* --- Auth --- */
+
 async function handleLogin(event) {
   event.preventDefault();
   const formData = new FormData(loginForm);
@@ -533,9 +557,8 @@ async function handleLogout() {
   if (inquiriesContainer) inquiriesContainer.innerHTML = "";
 }
 
-/* ============================================
-   Dashboard init
-   ============================================ */
+/* --- Dashboard init --- */
+
 async function initDashboard() {
   loadInquiries();
 
@@ -550,9 +573,21 @@ async function initDashboard() {
   renderImagesEditor();
 }
 
-/* ============================================
-   Event delegation
-   ============================================ */
+/* --- Event delegation (single consolidated handler) --- */
+
+function handleDocumentClick(e) {
+  const target = e.target;
+
+  const saveContentBtn = target.closest("[data-save-content]");
+  if (saveContentBtn) { saveContent(); return; }
+
+  const uploadBtn = target.closest("[data-upload-image]");
+  if (uploadBtn) { uploadImage(); return; }
+
+  const delBtn = target.closest("[data-delete-upload]");
+  if (delBtn) { deleteUpload(delBtn.dataset.deleteUpload); return; }
+}
+
 function initEvents() {
   if (loginForm) {
     loginForm.addEventListener("submit", handleLogin);
@@ -562,28 +597,13 @@ function initEvents() {
   if (logoutButton) logoutButton.addEventListener("click", handleLogout);
   if (refreshButton) refreshButton.addEventListener("click", loadInquiries);
 
-  // Content save
-  document.addEventListener("click", (e) => {
-    const saveContentBtn = e.target.closest("[data-save-content]");
-    if (saveContentBtn) { saveContent(); return; }
-  });
+  document.addEventListener("click", handleDocumentClick);
 
-  // Menu actions (delegated)
   if (menuEditor) menuEditor.addEventListener("click", handleMenuActions);
-
-  // Image actions
-  document.addEventListener("click", (e) => {
-    const uploadBtn = e.target.closest("[data-upload-image]");
-    if (uploadBtn) { uploadImage(); return; }
-
-    const delBtn = e.target.closest("[data-delete-upload]");
-    if (delBtn) { deleteUpload(delBtn.dataset.deleteUpload); return; }
-  });
 }
 
-/* ============================================
-   Init
-   ============================================ */
+/* --- Init --- */
+
 async function initAdmin() {
   initShell("admin");
   initTabs();

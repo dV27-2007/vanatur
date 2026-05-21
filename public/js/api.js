@@ -1,3 +1,7 @@
+/* ============================================
+   Supabase client and data access layer
+   ============================================ */
+
 const SUPABASE_URL = "https://qwsomhprbregtangrnut.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3c29taHByYnJlZ3RhbmdybnV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDM5MDYsImV4cCI6MjA5NDUxOTkwNn0.0Yf2KbncmpCm72y-uh84s-c82ANscV1QUQ1pBlWhwfM";
@@ -5,7 +9,11 @@ const SUPABASE_ANON_KEY =
 const { createClient } = supabase;
 export const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let siteContentPromise;
+let siteContentPromise = null;
+
+export function invalidateSiteContentCache() {
+  siteContentPromise = null;
+}
 
 export async function fetchSiteContent() {
   if (!siteContentPromise) {

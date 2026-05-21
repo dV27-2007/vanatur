@@ -8,9 +8,10 @@
     <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body data-page="admin">
+    <a class="skip-link" href="#main-content">Перейти к основному содержимому</a>
     <header data-site-header></header>
 
-    <main>
+    <main id="main-content">
       <!-- Login view -->
       <div class="admin-page" data-admin-login-view>
         <div class="container">
@@ -42,7 +43,7 @@
       </div>
 
       <!-- Dashboard view -->
-      <div class="admin-page" data-admin-dashboard-view style="display:none">
+      <div class="admin-page is-hidden" data-admin-dashboard-view>
         <div class="container">
           <div class="admin-header">
             <div>
@@ -52,17 +53,17 @@
             <button class="button button-ghost" type="button" data-admin-logout>Выйти</button>
           </div>
 
-          <div class="admin-tabs" data-admin-tabs>
-            <button class="admin-tab is-active" type="button" data-tab="inquiries">Заявки</button>
-            <button class="admin-tab" type="button" data-tab="content">Тексты</button>
-            <button class="admin-tab" type="button" data-tab="menu">Меню</button>
-            <button class="admin-tab" type="button" data-tab="images">Изображения</button>
+          <div class="admin-tabs" role="tablist" aria-label="Разделы панели управления" data-admin-tabs>
+            <button class="admin-tab is-active" type="button" role="tab" aria-selected="true" data-tab="inquiries">Заявки</button>
+            <button class="admin-tab" type="button" role="tab" aria-selected="false" data-tab="content">Тексты</button>
+            <button class="admin-tab" type="button" role="tab" aria-selected="false" data-tab="menu">Меню</button>
+            <button class="admin-tab" type="button" role="tab" aria-selected="false" data-tab="images">Изображения</button>
           </div>
 
           <!-- Inquiries panel -->
           <div class="admin-panel is-active" data-panel="inquiries">
             <div class="admin-section">
-              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin-bottom:1rem">
+              <div class="admin-section-header">
                 <h2>Заявки</h2>
                 <button class="button button-ghost" type="button" data-admin-refresh>Обновить</button>
               </div>

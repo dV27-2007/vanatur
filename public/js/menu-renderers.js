@@ -1,3 +1,8 @@
+/* ============================================
+   Menu-specific renderers: tabs, category grid,
+   highlights, notes, dish cards
+   ============================================ */
+
 import { createEmptyState, createFeatureList, escapeHtml } from "./ui.js";
 
 function createIngredientsMarkup(ingredients = []) {
@@ -59,13 +64,25 @@ export function mountMenuTabs({ categories = [], tabsSelector, panelSelector, em
         ${category.items.map((item) => renderMenuDishCard(item, { mediaLabel: category.name })).join("")}
       </div>
     `;
+    panel.setAttribute("aria-labelledby", `menu-tab-${activeIndex}`);
   };
 
   const renderTabs = () => {
+    tabs.setAttribute("role", "tablist");
+    tabs.setAttribute("aria-label", "Категории меню");
+
     tabs.innerHTML = categories
       .map(
         (category, index) => `
-          <button class="tab-button ${index === activeIndex ? "is-active" : ""}" type="button" data-index="${index}">
+          <button
+            class="tab-button ${index === activeIndex ? "is-active" : ""}"
+            type="button"
+            role="tab"
+            id="menu-tab-${index}"
+            aria-selected="${index === activeIndex}"
+            aria-controls="menu-panel"
+            data-index="${index}"
+          >
             ${escapeHtml(category.name)}
           </button>
         `
@@ -83,6 +100,9 @@ export function mountMenuTabs({ categories = [], tabsSelector, panelSelector, em
     renderTabs();
     renderPanel();
   });
+
+  panel.setAttribute("role", "tabpanel");
+  panel.id = "menu-panel";
 
   renderTabs();
   renderPanel();

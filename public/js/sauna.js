@@ -1,14 +1,12 @@
 import { fetchSiteContent } from "./api.js";
 import { initReveal, initShell } from "./site-shell.js";
-import { createEmptyState, createFeatureList, escapeHtml } from "./ui.js";
+import { createEmptyState, createFeatureList, escapeHtml, renderInfoCards } from "./ui.js";
 
 function initRituals(rituals = []) {
   const navContainer = document.querySelector("[data-sauna-ritual-nav]");
   const panelContainer = document.querySelector("[data-sauna-ritual-panel]");
 
-  if (!navContainer || !panelContainer) {
-    return;
-  }
+  if (!navContainer || !panelContainer) return;
 
   if (!rituals.length) {
     panelContainer.innerHTML = createEmptyState("Форматы сауны скоро появятся.");
@@ -32,13 +30,25 @@ function initRituals(rituals = []) {
         ${createFeatureList(ritual.includes)}
       </div>
     `;
+    panelContainer.setAttribute("aria-labelledby", `ritual-tab-${activeIndex}`);
   };
 
   const renderNav = () => {
+    navContainer.setAttribute("role", "tablist");
+    navContainer.setAttribute("aria-label", "Форматы сауны");
+
     navContainer.innerHTML = rituals
       .map(
         (ritual, index) => `
-          <button class="ritual-button ${index === activeIndex ? "is-active" : ""}" type="button" data-index="${index}">
+          <button
+            class="ritual-button ${index === activeIndex ? "is-active" : ""}"
+            type="button"
+            role="tab"
+            id="ritual-tab-${index}"
+            aria-selected="${index === activeIndex}"
+            aria-controls="ritual-panel"
+            data-index="${index}"
+          >
             ${escapeHtml(ritual.title)}
           </button>
         `
@@ -48,40 +58,18 @@ function initRituals(rituals = []) {
 
   navContainer.addEventListener("click", (event) => {
     const button = event.target.closest("[data-index]");
-
-    if (!button) {
-      return;
-    }
+    if (!button) return;
 
     activeIndex = Number(button.dataset.index);
     renderNav();
     renderPanel();
   });
 
+  panelContainer.setAttribute("role", "tabpanel");
+  panelContainer.id = "ritual-panel";
+
   renderNav();
   renderPanel();
-}
-
-function renderSimpleCards(selector, items = [], pillLabel, emptyMessage) {
-  const container = document.querySelector(selector);
-
-  if (!container) {
-    return;
-  }
-
-  container.innerHTML = items.length
-    ? items
-        .map(
-          (item) => `
-            <article class="info-card reveal">
-              <span class="pill">${escapeHtml(pillLabel)}</span>
-              <h3>${escapeHtml(item.title)}</h3>
-              <p>${escapeHtml(item.text)}</p>
-            </article>
-          `
-        )
-        .join("")
-    : createEmptyState(emptyMessage);
 }
 
 async function initPage() {
@@ -90,18 +78,8 @@ async function initPage() {
   try {
     const content = await fetchSiteContent();
     initRituals(content.sauna?.rituals);
-    renderSimpleCards(
-      "[data-sauna-benefits]",
-      content.sauna?.benefits,
-      "Преимущество",
-      "Преимущества сауны скоро появятся."
-    );
-    renderSimpleCards(
-      "[data-sauna-packages]",
-      content.sauna?.packages,
-      "Сценарий",
-      "Комбинации с сауной скоро появятся."
-    );
+    renderInfoCards("[data-sauna-benefits]", content.sauna?.benefits, "Преимущество", "Преимущества сауны скоро появятся.");
+    renderInfoCards("[data-sauna-packages]", content.sauna?.packages, "Сценарий", "Комбинации с сауной скоро появятся.");
   } catch (error) {
     console.error(error);
   }

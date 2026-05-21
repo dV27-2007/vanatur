@@ -1,3 +1,8 @@
+/* ============================================
+   Site shell: header, footer, mobile nav,
+   reveal animations
+   ============================================ */
+
 const navigationItems = [
   { key: "home", label: "Главная", href: "/" },
   { key: "restaurant", label: "Ресторан", href: "/restaurant.html" },
@@ -8,8 +13,9 @@ const navigationItems = [
   { key: "hotel", label: "Отель", href: "/hotel.html" },
 ];
 
-let revealObserver;
+let revealObserver = null;
 let backdropEl = null;
+let mobileMenuCleanup = null;
 
 function buildHeader(activePage) {
   const navLinks = navigationItems
@@ -32,11 +38,11 @@ function buildHeader(activePage) {
         </span>
       </a>
 
-      <button class="menu-toggle" type="button" aria-label="Menu" aria-expanded="false" data-menu-toggle>
+      <button class="menu-toggle" type="button" aria-label="Меню" aria-expanded="false" aria-controls="site-nav" data-menu-toggle>
         <span></span>
       </button>
 
-      <nav class="site-nav" data-site-nav>
+      <nav class="site-nav" id="site-nav" aria-label="Основная навигация" data-site-nav>
         ${navLinks}
         <a class="button" href="/contact.html">Связаться</a>
       </nav>
@@ -149,21 +155,33 @@ function bindMobileMenu() {
     document.body.style.overflow = "hidden";
   };
 
-  toggle.addEventListener("click", () => {
+  const onToggleClick = () => {
     const expanded = toggle.getAttribute("aria-expanded") === "true";
     if (expanded) closeMenu();
     else openMenu();
-  });
+  };
 
-  backdrop.addEventListener("click", closeMenu);
+  const onBackdropClick = closeMenu;
 
-  nav.querySelectorAll("a").forEach((link) => {
-    link.addEventListener("click", closeMenu);
-  });
+  const onNavLinkClick = (e) => {
+    if (e.target.closest("a")) closeMenu();
+  };
 
-  document.addEventListener("keydown", (event) => {
+  const onKeyDown = (event) => {
     if (event.key === "Escape") closeMenu();
-  });
+  };
+
+  toggle.addEventListener("click", onToggleClick);
+  backdrop.addEventListener("click", onBackdropClick);
+  nav.addEventListener("click", onNavLinkClick);
+  document.addEventListener("keydown", onKeyDown);
+
+  mobileMenuCleanup = () => {
+    toggle.removeEventListener("click", onToggleClick);
+    backdrop.removeEventListener("click", onBackdropClick);
+    nav.removeEventListener("click", onNavLinkClick);
+    document.removeEventListener("keydown", onKeyDown);
+  };
 }
 
 function initMobileQuickBar(activePage) {
@@ -191,6 +209,11 @@ export function initShell(activePage) {
     footer.innerHTML = buildFooter(activePage);
     const yearNode = footer.querySelector("[data-year]");
     if (yearNode) yearNode.textContent = String(new Date().getFullYear());
+  }
+
+  if (mobileMenuCleanup) {
+    mobileMenuCleanup();
+    mobileMenuCleanup = null;
   }
 
   bindMobileMenu();
